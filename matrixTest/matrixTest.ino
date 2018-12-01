@@ -3,12 +3,39 @@
 Accessory nunchuck1;
 LedControl lc = LedControl(12,11,10,4); //
 
+int buttonState = 0;
+int valX = 4;
+int valY = 4;
+
+int valFoodX = 6;
+int valFoodY = 6;
+
+int maxX = 7;
+int minX = 0;
+int maxY = 7;
+int minY = 0;
+
+int myPositionX [64];
+int myPositionY [64];
+
+int snakeLength = 0;
+
 int ROWS = 8;
 int COLUMNS = 8;
 int matrix_state[8][32];
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+
+  myPositionX[0]= valX;
+  myPositionY[0]= valY;
+
+  for(int i = 1; i<64; i++)
+  {
+    myPositionX [i] = -1;
+    myPositionY [i] = -1;
+  }
+  
   lc.shutdown(0,false);
   lc.setIntensity(0,0.1);
   lc.clearDisplay(0);
@@ -17,65 +44,59 @@ void setup() {
   pinMode(2, INPUT);
   pinMode(3, INPUT);
 
- Serial.begin(115200);
- Serial.println("start");
- nunchuck1.begin();
+  Serial.begin(115200);
+  Serial.println("start");
+  nunchuck1.begin();
 }
-
-int buttonState = 0;
-int valX = 4;
-int valY = 4;
-
-int maxX = 7;
-int minX = 0;
-int maxY = 7;
-int minY = 0;
-
 
 void loop() {
 
   if(nunchuck1.getJoyX()>170){
-    if(valX<maxX)
-    valX++;
+    if(myPositionX[0] < maxX)
+    {
+      UpdateAllPositions();
+      myPositionX[0]++;
+    }   
   } 
   else if (nunchuck1.getJoyX()<100){
-    if(valX>minX)
-    valX--;
+    if(myPositionX[0] > minX)
+    {
+      UpdateAllPositions();
+      myPositionX[0]--;
+    }   
   }
 
   if(nunchuck1.getJoyY()>170){
-    if(valY<maxY)
-    valY++;
+    if( myPositionY[0] < maxY)
+    {
+      UpdateAllPositions();
+       myPositionY[0]++;
+    }
+     
   } 
   else if (nunchuck1.getJoyY()<100){
-    if(valY>minY)
-    valY--;
+    if( myPositionY[0]>minY)
+    {
+      UpdateAllPositions();
+      myPositionY[0]--;
+    }
   }
   
-
-  /*
-  if(random(-1,1))
+  if(myPositionX[0] == valFoodX &&  myPositionY[0] == valFoodY){
+    valFoodX = random(0,8);
+    valFoodY = random(0,8);
+    GrowSnake();
+  }
+  
+  for(int i = 0; i < 64; i++)
   {
-    if(random(-1,1))
-    {
-      valX++;
-    }else {
-      valX--;
-    }
+    if(myPositionX[i] == -1 ){break;}
+    lc.setLed(0,myPositionX[i],myPositionY[i],true);
+    Serial.println("On ");
+    Serial.println(i);
   }
-  else {
-    if(random(-1,1))
-    {
-      valY++;
-    }else {
-      valY--;
-    }
-  }
-  */
-  //valX = (nunchuck1.getJoyX()-127)/8;
-  //valY = (nunchuck1.getJoyY()-127)/8;
-  
-  lc.setLed(0,valX,valY,true); 
+   
+  lc.setLed(0,valFoodX, valFoodY,true);
   //now the Led at row 0, second from the left side
   //lc.setLed(0,0,1,true);
   int randNumber = random(0, 1); 
@@ -98,8 +119,8 @@ void loop() {
 
 
   //WiiChuck
-  nunchuck1.readData();
- nunchuck1.printInputs();
+ nunchuck1.readData();
+ //nunchuck1.printInputs();
 
  nunchuck1.getJoyX();
  nunchuck1.getJoyY();
@@ -112,4 +133,34 @@ void loop() {
 
  nunchuck1.getButtonC();
  nunchuck1.getButtonZ();
+}
+
+void GrowSnake()
+{
+  if(snakeLength < 63)
+  {
+    Serial.println("Snake Grows");
+    snakeLength++;
+    myPositionX[snakeLength] = myPositionX[snakeLength - 1];
+    myPositionY[snakeLength] = myPositionY[snakeLength - 1];
+  } 
+}
+
+void UpdateAllPositionsX()
+{
+  for(int i = 1; i < 63; i++)
+  {
+    if(myPositionX[i] == -1 ){break;}
+    myPositionX[i] = myPositionX[i - 1];
+  }
+}
+
+void UpdateAllPositions()
+{
+  for(int i = 1; i < 63; i++)
+  {
+    if(myPositionX[i] == -1 ){break;}
+    myPositionX[i] = myPositionX[i - 1];
+    myPositionY[i] = myPositionY[i - 1];
+  }
 }
