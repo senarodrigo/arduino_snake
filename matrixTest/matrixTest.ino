@@ -12,9 +12,10 @@ int valFoodY = 6;
 
 int maxX = 7;
 int minX = 0;
-int maxY = 7;
+int maxY = 31;
 int minY = 0;
 
+//Change 64 to a non-magic number and edit rest of the code + change 64 to (64 x 4 screens = 256)
 int myPositionX [64];
 int myPositionY [64];
 
@@ -36,13 +37,7 @@ void setup() {
     myPositionY [i] = -1;
   }
   
-  lc.shutdown(0,false);
-  lc.setIntensity(0,0.1);
-  lc.clearDisplay(0);
-  //lc.setLed(0,1,1,1);
-
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
+  initAllScreens();
 
   Serial.begin(115200);
   Serial.println("start");
@@ -50,7 +45,9 @@ void setup() {
 }
 
 void loop() {
-
+  nunchuck1.readData();
+  //clearAllScreens();
+  
   if(nunchuck1.getJoyX()>170){
     if(myPositionX[0] < maxX)
     {
@@ -70,7 +67,7 @@ void loop() {
     if( myPositionY[0] < maxY)
     {
       UpdateAllPositions();
-       myPositionY[0]++;
+      myPositionY[0]++;
     }
      
   } 
@@ -83,60 +80,25 @@ void loop() {
   }
   
   if(myPositionX[0] == valFoodX &&  myPositionY[0] == valFoodY){
-    valFoodX = random(0,8);
-    valFoodY = random(0,8);
+    valFoodX = random(0,maxX);
+    valFoodY = random(0,maxY);
     GrowSnake();
   }
   
   for(int i = 0; i < 64; i++)
   {
     if(myPositionX[i] == -1 ){break;}
-    lc.setLed(0,myPositionX[i],myPositionY[i],true);
-    Serial.println("On ");
-    Serial.println(i);
+    drawAt(myPositionX[i],myPositionY[i]);
   }
    
-  lc.setLed(0,valFoodX, valFoodY,true);
-  //now the Led at row 0, second from the left side
-  //lc.setLed(0,0,1,true);
-  int randNumber = random(0, 1); 
-  //delay(1000); 
+  drawAt(valFoodX, valFoodY);
   
-  delay(10);
-
-  lc.clearDisplay(0);
-  //switch the first Led off (second one stays on) 
-  //lc.setLed(0,2,7,false); 
-  
-  // put your main code here, to run repeatedly:
-  //if(buttonState){
-    //val0++;
-  //}
-  //else {
-    //val0--;
-  //}
-  //led_matrix.setLed(0,val0,val0,val0);
-
-
-  //WiiChuck
- nunchuck1.readData();
- //nunchuck1.printInputs();
-
- nunchuck1.getJoyX();
- nunchuck1.getJoyY();
-
- nunchuck1.getRollAngle();
- nunchuck1.getPitchAngle();
- nunchuck1.getAccelX();
- nunchuck1.getAccelY();
- nunchuck1.getAccelZ();
-
- nunchuck1.getButtonC();
- nunchuck1.getButtonZ();
+ delay(20);
 }
 
 void GrowSnake()
 {
+  clearAllScreens();
   if(snakeLength < 63)
   {
     Serial.println("Snake Grows");
@@ -146,21 +108,41 @@ void GrowSnake()
   } 
 }
 
-void UpdateAllPositionsX()
+void UpdateAllPositions()
 {
-  for(int i = 1; i < 63; i++)
+  clearAllScreens();
+  for(int i = 63; i > 0; i--)
   {
-    if(myPositionX[i] == -1 ){break;}
-    myPositionX[i] = myPositionX[i - 1];
+    if(myPositionX[i] != -1 ){
+      myPositionX[i] = myPositionX[i - 1];
+      myPositionY[i] = myPositionY[i - 1];
+   }
   }
 }
 
-void UpdateAllPositions()
-{
-  for(int i = 1; i < 63; i++)
-  {
-    if(myPositionX[i] == -1 ){break;}
-    myPositionX[i] = myPositionX[i - 1];
-    myPositionY[i] = myPositionY[i - 1];
-  }
+void drawAt(int x, int y){
+ int whichScreen = 3 - floor(float(y)/8.0)  ;
+ int yPos = y%8;
+ lc.setLed(whichScreen,x,yPos,true);
+}
+
+void initAllScreens(){
+ lc.shutdown(0,false);
+ lc.shutdown(1,false);
+ lc.shutdown(2,false);
+ lc.shutdown(3,false);
+
+ lc.setIntensity(0,1);
+ lc.setIntensity(1,1);
+ lc.setIntensity(2,1);
+ lc.setIntensity(3,1);
+
+ clearAllScreens();
+}
+
+void clearAllScreens(){
+ lc.clearDisplay(0);
+ lc.clearDisplay(1);
+ lc.clearDisplay(2);
+ lc.clearDisplay(3);
 }
